@@ -6,8 +6,8 @@ use Illuminate\Routing\Controller;
 
 class ShopController extends Controller
 {
-    public function index()
+    public function dashboard()
     {
-        return view('Shop::index');
+        return view('shop::index');
     }
 }

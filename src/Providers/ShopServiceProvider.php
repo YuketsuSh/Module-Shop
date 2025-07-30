@@ -19,11 +19,13 @@ class ShopServiceProvider extends ServiceProvider
     public function adminNavigation(): array
     {
         return [
-            strtolower('Shop') => [
+            'shop' => [
                 'name' => 'Shop',
-                'type' => 'link',
-                'icon' => 'bi bi-box',
-                'route' => 'admin.' . strtolower('Shop') . '.index',
+                'type' => 'dropdown',
+                'icon' => 'fa-shopping-cart',
+                'items' => [
+                    'admin.shop.dashboard' => ['name' => 'Dashboard'],
+                ]
             ],
         ];
     }
