@@ -1,0 +1,12 @@
+{
+    "id": "shop",
+    "name": "Shop",
+    "version": "1.0.0",
+    "description": "A shop plugin to sell items on your website.",
+    "authors": [
+        "StratumCMS"
+    ],
+    "providers": [
+        "\\Modules\\Shop\\Providers\\ShopServiceProvider"
+    ]
+}

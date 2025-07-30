@@ -1,0 +1,1 @@
+<h1>Shop module - vue par défaut</h1>
