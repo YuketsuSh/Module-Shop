@@ -20,13 +20,37 @@ class ShopServiceProvider extends ServiceProvider
     {
         return [
             'shop' => [
-                'name' => 'Shop',
+                'name' => 'Boutique',
                 'type' => 'dropdown',
                 'icon' => 'fa-shopping-cart',
                 'items' => [
-                    'admin.shop.dashboard' => ['name' => 'Dashboard'],
+                    'admin.shop.dashboard' => [
+                        'name' => 'Dashboard',
+                        'icon' => 'fa-chart-line'
+                    ],
+                    'admin.shop.products.index' => [
+                        'name' => 'Produits',
+                        'icon' => 'fa-box'
+                    ],
+                    'admin.shop.categories.index' => [
+                        'name' => 'Catégories',
+                        'icon' => 'fa-folder-open'
+                    ],
+                    'admin.shop.tags.index' => [
+                        'name' => 'Tags',
+                        'icon' => 'fa-tags'
+                    ],
+                    'admin.shop.orders.index' => [
+                        'name' => 'Commandes',
+                        'icon' => 'fa-receipt'
+                    ],
+                    'admin.shop.settings.index' => [
+                        'name' => 'Paramètres',
+                        'icon' => 'fa-cogs'
+                    ],
                 ]
             ],
         ];
     }
+
 }

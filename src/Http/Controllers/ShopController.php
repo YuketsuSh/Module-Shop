@@ -8,6 +8,6 @@ class ShopController extends Controller
 {
     public function dashboard()
     {
-        return view('shop::index');
+        return view('shop::admin.index');
     }
 }
