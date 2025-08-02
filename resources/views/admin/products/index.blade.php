@@ -1,4 +1,5 @@
 @extends('admin.layouts.admin')
+
 @section('title', 'Produits')
 
 @section('content')
@@ -42,6 +43,12 @@
                                 <a href="{{ route('admin.shop.products.edit', $product) }}" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 border bg-background hover:bg-accent hover:text-accent-foreground">
                                     <i class="fas fa-pen"></i>
                                 </a>
+                                @if($product->type === 'digital')
+                                    <a href="{{ route('admin.shop.products.versions.index', $product) }}"
+                                       class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 border bg-background hover:bg-secondary hover:text-primary">
+                                        <i class="fas fa-code-branch"></i> Versions
+                                    </a>
+                                @endif
                                 <form action="{{ route('admin.shop.products.destroy', $product) }}" method="POST" onsubmit="return confirm('Supprimer ce produit ?')">
                                     @csrf
                                     @method('DELETE')
