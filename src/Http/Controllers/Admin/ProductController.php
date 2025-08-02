@@ -38,8 +38,13 @@ class ProductController extends Controller
     {
         $data = $request->validated();
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
+
         $product = Product::create($data);
         $product->tags()->sync($request->input('tags', []));
+
+        if ($product->type === 'digital' && $request->hasFile('file')) {
+            $this->storeProductFile($product, $request->file('file'), $request->input('changelog'));
+        }
 
         return redirect()->route('admin.shop.products.index')
             ->with('success', 'Produit créé avec succès.');
@@ -64,8 +69,13 @@ class ProductController extends Controller
     {
         $data = $request->validated();
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
+
         $product->update($data);
         $product->tags()->sync($request->input('tags', []));
+
+        if ($product->type === 'digital' && $request->hasFile('file')) {
+            $this->storeProductFile($product, $request->file('file'), $request->input('changelog'));
+        }
 
         return redirect()->route('admin.shop.products.index')
             ->with('success', 'Produit mis à jour avec succès.');
@@ -75,5 +85,20 @@ class ProductController extends Controller
     {
         $product->delete();
         return back()->with('success', 'Produit supprimé.');
+    }
+
+    protected function storeProductFile(Product $product, $file, ?string $changelog = null): void
+    {
+        $versionNumber = 'v' . ($product->versions()->count() + 1);
+        $filename = $versionNumber . '_' . Str::slug($file->getClientOriginalName());
+        $path = $file->storeAs("products/{$product->id}/versions", $filename);
+
+        $product->versions()->create([
+            'version' => $versionNumber,
+            'changelog' => $changelog,
+            'file_path' => $path,
+            'file_hash' => hash_file('sha256', storage_path("app/{$path}")),
+            'ttl' => null,
+        ]);
     }
 }

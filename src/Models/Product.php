@@ -31,4 +31,10 @@ class Product extends Model
     {
         return $this->hasMany(ProductVersion::class);
     }
+
+    public function registerMediaCollections(): void {
+        $this->addMediaCollection('thumbnail')->singleFile();
+        $this->addMediaCollection('gallery');
+    }
+
 }

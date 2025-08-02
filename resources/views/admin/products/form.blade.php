@@ -51,10 +51,17 @@
                         </div>
 
                         <template x-if="productType === 'digital'">
-                            <div>
-                                <label class="label">Fichier téléchargeable (ZIP, PDF...)</label>
-                                <input type="file" name="file" class="w-full h-10 px-3 rounded-md border border-border bg-background">
-                                @error('file')<p class="text-destructive text-sm mt-1">{{ $message }}</p>@enderror
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="label">Fichier téléchargeable (ZIP, PDF...)</label>
+                                    <input type="file" name="file" class="w-full h-10 px-3 rounded-md border border-border bg-background">
+                                    @error('file')<p class="text-destructive text-sm mt-1">{{ $message }}</p>@enderror
+                                </div>
+                                <div>
+                                    <label class="label">Notes de version (changelog)</label>
+                                    <input type="text" name="changelog" class="w-full h-10 px-3 rounded-md border border-border bg-background" placeholder="Ex: Ajout de contenu, correction de bugs...">
+                                    @error('changelog')<p class="text-destructive text-sm mt-1">{{ $message }}</p>@enderror
+                                </div>
                             </div>
                         </template>
 
