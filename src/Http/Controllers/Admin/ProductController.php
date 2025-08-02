@@ -8,6 +8,7 @@ use Modules\Shop\Http\Requests\ProductRequest;
 use Modules\Shop\Models\Category;
 use Modules\Shop\Models\Product;
 use Modules\Shop\Models\Tag;
+use Modules\Shop\Support\Currency;
 
 class ProductController extends Controller
 {
@@ -21,10 +22,13 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $tags = Tag::all();
+        $currencies = Currency::all();
 
-        return view('shop::admin.products.form', [
+
+        return view('shop::admin.products.create', [
             'product' => new Product(),
             'categories' => $categories,
+            'currencies' => $currencies,
             'tags' => $tags,
             'editing' => false,
         ]);
@@ -45,11 +49,13 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $tags = Tag::all();
+        $currencies = Currency::all();
 
-        return view('shop::admin.products.form', [
+        return view('shop::admin.products.edit', [
             'product' => $product->load('tags'),
             'categories' => $categories,
             'tags' => $tags,
+            'currencies' => $currencies,
             'editing' => true,
         ]);
     }
