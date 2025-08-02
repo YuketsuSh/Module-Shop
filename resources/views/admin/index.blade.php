@@ -1,7 +1,6 @@
 @extends('admin.layouts.admin')
 @section('title', "Shop - Admin Dashboard")
 
-
 @php
     $dashboardData = [
         'kpis'         => $kpis ?? ['revenue' => 0, 'orders_today' => 0, 'abandoned_carts' => 0, 'avg_order' => 0],
@@ -14,8 +13,6 @@
 @section('content')
     <div x-data='shopDashboard(@json($dashboardData))' class="max-w-7xl mx-auto space-y-6">
 
-
-        <!-- Header + actions -->
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <a href="{{ route('admin.shop.products.index') }}"
@@ -38,7 +35,6 @@
             </div>
         </div>
 
-        <!-- Filtres période -->
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div class="flex items-center gap-2">
@@ -79,7 +75,6 @@
             </div>
         </div>
 
-        <!-- KPIs -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
                 <p class="text-sm text-muted-foreground">Chiffre d’affaires</p>
@@ -99,7 +94,6 @@
             </div>
         </div>
 
-        <!-- Graphe ventes (SVG pur, pas de lib) -->
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold leading-none tracking-tight">Évolution des ventes</h3>
@@ -113,9 +107,7 @@
             <div class="mt-4">
                 <div class="w-full h-48">
                     <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full">
-                        <!-- Aire -->
                         <path :d="areaPath()" class="fill-primary/10"></path>
-                        <!-- Ligne -->
                         <polyline :points="polylinePoints()" class="stroke-primary" stroke-width="2" fill="none"></polyline>
                     </svg>
                 </div>
@@ -123,9 +115,7 @@
             </div>
         </div>
 
-        <!-- Deux colonnes : Top produits / Dernières commandes -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Top produits -->
             <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                 <div class="flex flex-col space-y-1.5 p-6">
                     <h3 class="text-lg font-semibold leading-none tracking-tight">Top produits</h3>
@@ -160,7 +150,6 @@
                 </div>
             </div>
 
-            <!-- Dernières commandes -->
             <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                 <div class="flex flex-col space-y-1.5 p-6">
                     <h3 class="text-lg font-semibold leading-none tracking-tight">Dernières commandes</h3>
@@ -190,11 +179,9 @@
                                     <td class="py-2 pr-4" x-text="o.customer ?? 'Invité'"></td>
                                     <td class="py-2 pr-4 text-right" x-text="formatCurrency(o.total)"></td>
                                     <td class="py-2 pr-4">
-                                        <span
-                                            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs"
-                                            :class="badgeClass(o.status)"
-                                            x-text="statusLabel(o.status)">
-                                        </span>
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs"
+                                              :class="badgeClass(o.status)"
+                                              x-text="statusLabel(o.status)"></span>
                                     </td>
                                     <td class="py-2 pr-0 text-right" x-text="o.created_at"></td>
                                 </tr>
@@ -212,10 +199,11 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="https://unpkg.com/alpinejs" defer></script>
+
     <script>
-        function shopDashboard({ kpis, sales, topProducts, recentOrders }) {
+        window.shopDashboard = function ({ kpis, sales, topProducts, recentOrders }) {
             return {
                 kpis, sales, topProducts, recentOrders,
                 preset: '30d',
@@ -286,9 +274,10 @@
                     return map[s] ?? base;
                 },
 
-                init() { this.setPreset(this.preset); }
+                init() {
+                    this.setPreset(this.preset);
+                }
             }
         }
     </script>
-
 @endpush
