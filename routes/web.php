@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Shop\Http\Controllers\CategoryController;
-use Modules\Shop\Http\Controllers\OrderController;
-use Modules\Shop\Http\Controllers\ProductController;
-use Modules\Shop\Http\Controllers\SettingsController;
+use Modules\Shop\Http\Controllers\Admin\CategoryController;
+use Modules\Shop\Http\Controllers\Admin\OrderController;
+use Modules\Shop\Http\Controllers\Admin\ProductController;
+use Modules\Shop\Http\Controllers\Admin\SettingsController;
+use Modules\Shop\Http\Controllers\Admin\TagController;
 use Modules\Shop\Http\Controllers\ShopController;
-use Modules\Shop\Http\Controllers\TagController;
 
 Route::prefix('admin/shop')->middleware(['web', 'auth'])->name('admin.shop.')->group(function () {
 
