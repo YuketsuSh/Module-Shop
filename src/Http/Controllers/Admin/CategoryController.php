@@ -83,4 +83,18 @@ class CategoryController extends Controller
 
         return redirect()->route('admin.shop.categories.index')->with('success', 'Catégorie mise à jour.');
     }
+
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'integer',
+        ]);
+
+        foreach ($request->order as $index => $categoryId) {
+            Category::where('id', $categoryId)->update(['position' => $index + 1]);
+        }
+
+        return response()->json(['message' => 'Ordre des catégories mis à jour.']);
+    }
 }

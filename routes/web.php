@@ -15,6 +15,7 @@ Route::prefix('admin/shop')->middleware(['web', 'auth'])->name('admin.shop.')->g
 
     Route::resource('products', ProductController::class);
     Route::resource('categories', CategoryController::class);
+    Route::post('categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder');
     Route::resource('tags', TagController::class);
 
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'update']);
