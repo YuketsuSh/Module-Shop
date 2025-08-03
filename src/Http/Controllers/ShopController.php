@@ -7,90 +7,78 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
+use Modules\Shop\Enum\OrderStatus;
+use Modules\Shop\Models\Order;
+use Modules\Shop\Models\Product;
 
 class ShopController extends Controller
 {
     public function dashboard(Request $request)
     {
-        $to   = $request->query('to')   ? Carbon::parse($request->query('to'))->endOfDay()   : Carbon::now()->endOfDay();
-        $from = $request->query('from') ? Carbon::parse($request->query('from'))->startOfDay() : Carbon::now()->subDays(29)->startOfDay();
+        $to = $request->query('to') ? Carbon::parse($request->query('to'))->endOfDay() : now()->endOfDay();
+        $from = $request->query('from') ? Carbon::parse($request->query('from'))->startOfDay() : now()->subDays(29)->startOfDay();
+
+        $orders = Order::whereBetween('created_at', [$from, $to]);
+        $paidOrders = (clone $orders)->where('status', OrderStatus::Paid);
+
+        $revenue = $paidOrders->sum('total');
+        $ordersCount = $paidOrders->count();
+        $ordersToday = Order::whereDate('created_at', now())->count();
+
+        $avgOrder = $ordersCount > 0 ? $revenue / $ordersCount : 0;
 
         $kpis = [
-            'revenue'          => 0.0,
-            'orders_today'     => 0,
-            'abandoned_carts'  => 0,
-            'avg_order'        => 0.0,
-        ];
-
-        $sales        = [];
-        $topProducts  = [];
-        $recentOrders = [];
-
-        if (Schema::hasTable('shop_orders')) {
-            $revenue = DB::table('shop_orders')
-                ->where('status', 'paid')
-                ->whereBetween('created_at', [$from, $to])
-                ->sum('total');
-
-            $ordersToday = DB::table('shop_orders')
-                ->whereDate('created_at', Carbon::today())
-                ->count();
-
-            $ordersCount = DB::table('shop_orders')
-                ->where('status', 'paid')
-                ->whereBetween('created_at', [$from, $to])
-                ->count();
-
-            $kpis['revenue']      = (float) $revenue;
-            $kpis['orders_today'] = (int) $ordersToday;
-            $kpis['avg_order']    = $ordersCount > 0 ? (float) $revenue / $ordersCount : 0.0;
-
-            $sales = DB::table('shop_orders')
-                ->selectRaw('DATE(created_at) as date, SUM(total) as total')
-                ->where('status', 'paid')
-                ->whereBetween('created_at', [$from, $to])
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get()
-                ->map(fn ($r) => ['date' => $r->date, 'total' => (float) $r->total])
-                ->all();
-
-            $recentOrders = DB::table('shop_orders')
-                ->select(['id', 'customer_name', 'total', 'status', 'created_at'])
-                ->orderByDesc('created_at')
-                ->limit(10)
-                ->get()
-                ->map(function ($o) {
-                    return [
-                        'id'         => (string) $o->id,
-                        'customer'   => $o->customer_name ?: 'Invité',
-                        'total'      => (float) $o->total,
-                        'status'     => $o->status,
-                        'created_at' => $o->created_at->format('Y-m-d H:i'),
-                        'show_url'   => route('admin.shop.orders.show', $o->id),
-                    ];
-                })
-                ->all();
-        }
-
-        if (Schema::hasTable('shop_carts')) {
-            $kpis['abandoned_carts'] = (int) DB::table('shop_carts')
+            'revenue' => round($revenue, 2),
+            'orders_today' => $ordersToday,
+            'avg_order' => round($avgOrder, 2),
+            'abandoned_carts' => DB::table('shop_carts')
                 ->where('is_active', false)
                 ->whereBetween('updated_at', [$from, $to])
-                ->count();
-        }
+                ->count(),
+        ];
 
-        if (Schema::hasTable('shop_order_items')) {
-            $topProducts = DB::table('shop_order_items')
-                ->selectRaw('COALESCE(product_name, CONCAT("Produit #", product_id)) as name, SUM(quantity) as qty, SUM(total) as revenue')
-                ->whereBetween('created_at', [$from, $to])
-                ->groupBy('name')
-                ->orderByDesc(DB::raw('SUM(quantity)'))
-                ->limit(5)
-                ->get()
-                ->map(fn ($r) => ['name' => $r->name, 'qty' => (int) $r->qty, 'revenue' => (float) $r->revenue])
-                ->all();
-        }
+        $sales = Order::where('status', OrderStatus::Paid)
+            ->whereBetween('created_at', [$from, $to])
+            ->get()
+            ->groupBy(fn ($order) => $order->created_at->toDateString())
+            ->map(fn ($dayOrders, $date) => [
+                'date' => $date,
+                'total' => round($dayOrders->sum('total'), 2),
+            ])->values()->all();
+
+        $recentOrders = Order::latest('created_at')
+            ->limit(10)
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => (string) $order->id,
+                    'customer' => optional($order->user)->name ?? 'Invité',
+                    'total' => round($order->total, 2),
+                    'status' => $order->status->value,
+                    'created_at' => $order->created_at->format('Y-m-d H:i'),
+                    'show_url' => route('admin.shop.orders.show', $order->id),
+                ];
+            })->all();
+
+        // Top products (using pivot)
+        $topProducts = DB::table('shop_order_product')
+            ->select('product_id', DB::raw('SUM(quantity) as qty'), DB::raw('SUM(price * quantity) as revenue'))
+            ->join('shop_orders', 'shop_orders.id', '=', 'shop_order_product.order_id')
+            ->where('shop_orders.status', OrderStatus::Paid->value)
+            ->whereBetween('shop_orders.created_at', [$from, $to])
+            ->groupBy('product_id')
+            ->orderByDesc(DB::raw('SUM(quantity)'))
+            ->limit(5)
+            ->get()
+            ->map(function ($row) {
+                $product = Product::find($row->product_id);
+                return [
+                    'name' => $product?->name ?? ("Produit #{$row->product_id}"),
+                    'qty' => (int) $row->qty,
+                    'revenue' => round($row->revenue, 2),
+                ];
+            })
+            ->all();
 
         return view('shop::admin.index', compact('kpis', 'sales', 'topProducts', 'recentOrders'));
     }
