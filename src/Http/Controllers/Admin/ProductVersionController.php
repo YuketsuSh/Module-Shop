@@ -40,33 +40,23 @@ class ProductVersionController extends Controller
         $originalName = $file->getClientOriginalName();
         $cleanName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
 
+        $relativePath = "shop/products/{$product->id}/{$request->version}";
+        $storagePath = "{$relativePath}/{$cleanName}";
+
+        Storage::disk('public')->putFileAs($relativePath, $file, $cleanName);
+
         $version = $product->versions()->create([
             'version' => $request->version,
             'changelog' => $request->changelog,
             'ttl' => $request->ttl,
-            'file_path' => '', // temporaire
-            'file_hash' => '',
-        ]);
-
-        $media = $version
-            ->addMedia($file)
-            ->preservingOriginal()
-            ->usingFileName($cleanName)
-            ->withCustomProperties(['original_name' => $originalName])
-            ->toMediaCollection('version_files', 'public');
-
-        $version->update([
-            'file_path' => $media->getPath(),
-            'file_hash' => hash_file('sha256', $media->getPath()),
+            'file_path' => $storagePath,
+            'file_hash' => hash_file('sha256', $file->getRealPath()),
         ]);
 
         return redirect()
             ->route('admin.shop.products.versions.index', $product)
             ->with('success', 'Version ajoutée avec succès.');
     }
-
-
-
 
     public function edit(Product $product, ProductVersion $version)
     {
@@ -93,21 +83,22 @@ class ProductVersionController extends Controller
         ];
 
         if ($request->hasFile('file')) {
-            $version->clearMediaCollection('version_files');
+            // Delete old file
+            if ($version->file_path && Storage::disk('public')->exists($version->file_path)) {
+                Storage::disk('public')->delete($version->file_path);
+            }
 
             $file = $request->file('file');
             $originalName = $file->getClientOriginalName();
             $cleanName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
 
-            $media = $version
-                ->addMedia($file)
-                ->preservingOriginal()
-                ->usingFileName($cleanName)
-                ->withCustomProperties(['original_name' => $originalName])
-                ->toMediaCollection('version_files', 'public');
+            $relativePath = "shop/products/{$product->id}/{$request->version}";
+            $storagePath = "{$relativePath}/{$cleanName}";
 
-            $data['file_path'] = $media->getPath();
-            $data['file_hash'] = hash_file('sha256', $media->getPath());
+            Storage::disk('public')->putFileAs($relativePath, $file, $cleanName);
+
+            $data['file_path'] = $storagePath;
+            $data['file_hash'] = hash_file('sha256', $file->getRealPath());
         }
 
         $version->update($data);
@@ -117,12 +108,12 @@ class ProductVersionController extends Controller
             ->with('success', 'Version mise à jour.');
     }
 
-
-
-
     public function destroy(Product $product, ProductVersion $version)
     {
-        Storage::delete($version->file_path);
+        if ($version->file_path && Storage::disk('public')->exists($version->file_path)) {
+            Storage::disk('public')->delete($version->file_path);
+        }
+
         $version->delete();
 
         return back()->with('success', 'Version supprimée.');
@@ -130,17 +121,14 @@ class ProductVersionController extends Controller
 
     public function download(Product $product, ProductVersion $version)
     {
-        $media = $version->getFirstMedia('version_files');
-
-        if (!$media) {
-            abort(404, 'Fichier introuvable pour cette version.');
-        }
-
         if ($version->ttl && $version->created_at->addDays($version->ttl)->isPast()) {
             return back()->withErrors('La période de téléchargement pour cette version est expirée.');
         }
 
-        return response()->download($media->getPath(), $media->file_name);
-    }
+        if (!$version->file_path || !Storage::disk('public')->exists($version->file_path)) {
+            abort(404, 'Fichier introuvable pour cette version.');
+        }
 
+        return Storage::disk('public')->download($version->file_path);
+    }
 }

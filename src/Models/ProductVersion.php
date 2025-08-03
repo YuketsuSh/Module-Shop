@@ -3,12 +3,9 @@
 namespace Modules\Shop\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 
-class ProductVersion extends Model implements HasMedia
+class ProductVersion extends Model
 {
-    use InteractsWithMedia;
 
     protected $table = 'shop_product_versions';
 
