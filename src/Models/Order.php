@@ -2,13 +2,14 @@
 
 namespace Modules\Shop\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Shop\Enum\OrderStatus;
 
 class Order extends Model
 {
-    protected $table = 'orders';
+    protected $table = 'shop_orders';
 
     protected $fillable = [
         'user_id',
@@ -28,7 +29,7 @@ class Order extends Model
     ];
 
     public function user(): BelongsTo {
-        return $this->belongsTo(config('auth.providers.users.model'));
+        return $this->belongsTo(User::class);
     }
 
     public function products(){
