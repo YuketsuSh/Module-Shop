@@ -35,7 +35,7 @@ class TagController extends Controller
             'slug' => $slug,
         ]);
 
-        return redirect()->route('shop.admin.tags.index')->with('success', 'Tag crée avec succès.');
+        return redirect()->route('admin.shop.tags.index')->with('success', 'Tag crée avec succès.');
     }
 
     public function edit(Tag $tag){
