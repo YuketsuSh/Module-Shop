@@ -8,6 +8,7 @@ use Modules\Shop\Http\Controllers\Admin\ProductVersionController;
 use Modules\Shop\Http\Controllers\Admin\SettingsController;
 use Modules\Shop\Http\Controllers\Admin\TagController;
 use Modules\Shop\Http\Controllers\ShopController;
+use Modules\Shop\Http\Controllers\CartController;
 
 Route::prefix('admin/shop')->middleware(['web', 'auth'])->name('admin.shop.')->group(function () {
 
@@ -32,5 +33,13 @@ Route::prefix('admin/shop')->middleware(['web', 'auth'])->name('admin.shop.')->g
         Route::delete('{version}', [ProductVersionController::class, 'destroy'])->name('destroy');
         Route::get('{version}/download', [ProductVersionController::class, 'download'])->name('download');
     });
+});
 
+
+Route::middleware('auth')->prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'show'])->name('cart.show');
+    Route::post('/add', [CartController::class, 'add'])->name('cart.add');
+    Route::put('/item/{id}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/item/{id}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::delete('/clear', [CartController::class, 'clear'])->name('cart.clear');
 });
